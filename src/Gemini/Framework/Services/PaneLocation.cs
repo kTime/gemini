@@ -4,6 +4,7 @@
 	{
 		Left,
 		Right,
-		Bottom
+		Bottom,
+        Document
 	}
 }
