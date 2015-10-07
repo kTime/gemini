@@ -25,8 +25,8 @@
 
 		<ContentControl DockPanel.Dock="Bottom" cal:View.Model="{Binding StatusBar}" IsTabStop="False" />
 
-        <xcad:DockingManager x:Name="Manager" DocumentsSource="{Binding Items}"
-							 AnchorablesSource="{Binding Tools}"
+        <xcad:DockingManager x:Name="Manager" 
+                             AnchorablesSource="{Binding AllScreens}"
 							 ActiveContent="{Binding ActiveLayoutItem, Mode=TwoWay}"
                              LayoutUpdated="OnManagerLayoutUpdated">
             <xcad:DockingManager.LayoutItemTemplateSelector>

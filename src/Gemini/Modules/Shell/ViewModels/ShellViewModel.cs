@@ -89,6 +89,12 @@ namespace Gemini.Modules.Shell.ViewModels
             get { return Items; }
         }
 
+        private readonly BindableCollection<ILayoutItem> allScreensCollection;
+        public IObservableCollection<ILayoutItem> AllScreens
+        {
+            get { return allScreensCollection; }
+        }
+
         private bool _showFloatingWindowsInTaskbar;
         public bool ShowFloatingWindowsInTaskbar
         {
@@ -117,6 +123,7 @@ namespace Gemini.Modules.Shell.ViewModels
             ((IActivate)this).Activate();
 
             _tools = new BindableCollection<ITool>();
+            allScreensCollection = new BindableCollection<ILayoutItem>();
 
             if (!HasPersistedState)
             {
@@ -125,6 +132,8 @@ namespace Gemini.Modules.Shell.ViewModels
                 _tools.Add(new DummyTool(PaneLocation.Left));
                 _tools.Add(new DummyTool(PaneLocation.Right));
                 _tools.Add(new DummyTool(PaneLocation.Bottom));
+
+                allScreensCollection.AddRange(Tools);
             }
         }
 
@@ -189,17 +198,25 @@ namespace Gemini.Modules.Shell.ViewModels
 
 	    public void ShowTool(ITool model)
 		{
-		    if (Tools.Contains(model))
-		        model.IsVisible = true;
-		    else
-		        Tools.Add(model);
+            if (Tools.Contains(model))
+                model.IsVisible = true;
+            else
+            {
+                Tools.Add(model);
+                this.AllScreens.Add(model);
+            }
 		    model.IsSelected = true;
 	        ActiveLayoutItem = model;
 		}
 
 		public void OpenDocument(IDocument model)
 		{
-			ActivateItem(model);
+            if (!this.AllScreens.Contains(model))
+            {
+                this.AllScreens.Add(model);
+            }
+
+            ActivateItem(model);            
 		}
 
 		public void CloseDocument(IDocument document)
@@ -217,7 +234,7 @@ namespace Gemini.Modules.Shell.ViewModels
             var currentActiveItem = ActiveItem;
 
             base.ActivateItem(item);
-
+                        
             if (!ReferenceEquals(item, currentActiveItem))
                 RaiseActiveDocumentChanged();
         }
@@ -233,7 +250,7 @@ namespace Gemini.Modules.Shell.ViewModels
 	    {
             var handler = ActiveDocumentChanged;
             if (handler != null)
-                handler(this, EventArgs.Empty);
+                handler(this, EventArgs.Empty);                      
 	    }
 
         protected override void OnActivationProcessed(IDocument item, bool success)
@@ -248,7 +265,8 @@ namespace Gemini.Modules.Shell.ViewModels
 	    {
 	        RaiseActiveDocumentChanging();
 
-	        base.DeactivateItem(item, close);
+            this.AllScreens.Remove(item);
+	        base.DeactivateItem(item, close);            
 
             RaiseActiveDocumentChanged();
 	    }
@@ -288,5 +306,6 @@ namespace Gemini.Modules.Shell.ViewModels
         {
             Application.Current.MainWindow.Close();
         }
+
 	}
 }

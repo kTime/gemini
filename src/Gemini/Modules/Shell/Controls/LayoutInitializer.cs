@@ -13,6 +13,8 @@ namespace Gemini.Modules.Shell.Controls
 		public bool BeforeInsertAnchorable(LayoutRoot layout, LayoutAnchorable anchorableToShow, ILayoutContainer destinationContainer)
 		{
 			var tool = anchorableToShow.Content as ITool;
+            var doc = anchorableToShow.Content as IDocument;
+
 			if (tool != null)
 			{
 				var preferredLocation = tool.PreferredLocation;
@@ -59,6 +61,17 @@ namespace Gemini.Modules.Shell.Controls
 											   
 				return true;
 			}
+            else if (doc != null)
+            {
+                var docPane = layout.Descendents().OfType<LayoutDocumentPane>().FirstOrDefault();
+                if (docPane == null)
+                {
+                    docPane = CreateDocumentPane(layout);
+                }
+                docPane.Children.Add(anchorableToShow);
+
+                return true;
+            }
 
 			return false;
 		}
@@ -129,7 +142,7 @@ namespace Gemini.Modules.Shell.Controls
 							throw new ArgumentOutOfRangeException();
 					}
 				}
-			}
+			}           
 		}
 
 		public bool BeforeInsertDocument(LayoutRoot layout, LayoutDocument anchorableToShow, ILayoutContainer destinationContainer)
@@ -141,5 +154,6 @@ namespace Gemini.Modules.Shell.Controls
 		{
 			
 		}
+                
 	}
 }
