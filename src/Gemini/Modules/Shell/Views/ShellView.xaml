@@ -55,10 +55,11 @@
 			<xcad:DockingManager.LayoutItemContainerStyleSelector>
 				<controls:PanesStyleSelector>
 					<controls:PanesStyleSelector.DocumentStyle>
-						<Style TargetType="{x:Type xcad:LayoutItem}">
+                        <Style TargetType="{x:Type xcad:LayoutAnchorableItem}">
 						<Setter Property="ContentId" Value="{Binding Model.ContentId}" />
 							<Setter Property="Title" Value="{Binding Model.DisplayName, Mode=OneWay}" />
 							<Setter Property="CloseCommand" Value="{Binding Model.CloseCommand}" />
+                            <Setter Property="HideCommand" Value="{Binding Model.CloseCommand}" />
 							<Setter Property="IconSource" Value="{Binding Model.IconSource, Converter={StaticResource NullableValueConverter}}" />
                             <Setter Property="IsSelected" Value="{Binding Model.IsSelected, Mode=TwoWay}" />
                         </Style>
