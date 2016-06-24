@@ -1,6 +1,8 @@
 ﻿using System;
+using System.ComponentModel.Composition;
 using System.Windows.Input;
 using Gemini.Framework.Commands;
+using Gemini.Properties;
 
 namespace Gemini.Modules.Shell.Commands
 {
@@ -16,12 +18,12 @@ namespace Gemini.Modules.Shell.Commands
 
         public override string Text
         {
-            get { return "_Open"; }
+            get { return Resources.FileOpenCommandText; }
         }
 
         public override string ToolTip
         {
-            get { return "Open"; }
+            get { return Resources.FileOpenCommandToolTip; }
         }
 
         public override Uri IconSource
@@ -29,9 +31,7 @@ namespace Gemini.Modules.Shell.Commands
             get { return new Uri("pack://application:,,,/Gemini;component/Resources/Icons/Open.png"); }
         }
 
-        public override KeyGesture KeyGesture
-        {
-            get { return new KeyGesture(Key.O, ModifierKeys.Control); }
-        }
+        [Export]
+        public static CommandKeyboardShortcut KeyGesture = new CommandKeyboardShortcut<OpenFileCommandDefinition>(new KeyGesture(Key.O, ModifierKeys.Control));
     }
 }

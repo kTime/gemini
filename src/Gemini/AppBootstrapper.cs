@@ -9,16 +9,40 @@ using Gemini.Framework.Services;
 
 namespace Gemini
 {
-    using System.Windows;
+    using System.Globalization;
     using System.Reflection;
+    using System.Threading;
+    using System.Windows;
+    using Gu.Localization;
 
     public class AppBootstrapper : BootstrapperBase
-	{
+    {
+        private List<Assembly> _priorityAssemblies;
+
 		protected CompositionContainer Container { get; set; }
+
+        internal IList<Assembly> PriorityAssemblies
+        {
+            get { return _priorityAssemblies; }
+        }
 
         public AppBootstrapper()
         {
+            this.PreInitialize();
             this.Initialize();
+        }
+
+        protected virtual void PreInitialize()
+        {
+            var code = Properties.Settings.Default.LanguageCode;
+
+            if (!string.IsNullOrWhiteSpace(code))
+            {
+                var culture = CultureInfo.GetCultureInfo(code);
+                Translator.CurrentCulture = culture;
+                Thread.CurrentThread.CurrentUICulture = culture;
+                Thread.CurrentThread.CurrentCulture = culture;
+            }
         }
 
 		/// <summary>
@@ -35,14 +59,14 @@ namespace Gemini
 
             // Prioritise the executable assembly. This allows the client project to override exports, including IShell.
             // The client project can override SelectAssemblies to choose which assemblies are prioritised.
-		    var priorityAssemblies = SelectAssemblies().ToList();
-		    var priorityCatalog = new AggregateCatalog(priorityAssemblies.Select(x => new AssemblyCatalog(x)));
+            _priorityAssemblies = SelectAssemblies().ToList();
+		    var priorityCatalog = new AggregateCatalog(_priorityAssemblies.Select(x => new AssemblyCatalog(x)));
 		    var priorityProvider = new CatalogExportProvider(priorityCatalog);
             
             // Now get all other assemblies (excluding the priority assemblies).
 			var mainCatalog = new AggregateCatalog(
                 AssemblySource.Instance
-                    .Where(assembly => !priorityAssemblies.Contains(assembly))
+                    .Where(assembly => !_priorityAssemblies.Contains(assembly))
                     .Select(x => new AssemblyCatalog(x)));
 		    var mainProvider = new CatalogExportProvider(mainCatalog);
 
@@ -63,6 +87,7 @@ namespace Gemini
             batch.AddExportedValue<IWindowManager>(new WindowManager());
             batch.AddExportedValue<IEventAggregator>(new EventAggregator());
             batch.AddExportedValue(Container);
+	        batch.AddExportedValue(this);
         }
 
 		protected override object GetInstance(Type serviceType, string key)

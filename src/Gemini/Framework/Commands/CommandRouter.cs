@@ -29,12 +29,14 @@ namespace Gemini.Framework.Commands
 
         private Dictionary<Type, CommandHandlerWrapper> BuildCommandHandlerWrappers(ICommandHandler[] commandHandlers)
         {
+            var commandHandlersList = SortCommandHandlers(commandHandlers);
+
             // Command handlers are either ICommandHandler<T> or ICommandListHandler<T>.
             // We need to extract T, and use it as the key in our dictionary.
 
             var result = new Dictionary<Type, CommandHandlerWrapper>();
 
-            foreach (var commandHandler in commandHandlers)
+            foreach (var commandHandler in commandHandlersList)
             {
                 var commandHandlerType = commandHandler.GetType();
                 EnsureCommandHandlerTypeToCommandDefinitionTypesPopulated(commandHandlerType);
@@ -46,25 +48,38 @@ namespace Gemini.Framework.Commands
             return result;
         }
 
+        private static List<ICommandHandler> SortCommandHandlers(ICommandHandler[] commandHandlers)
+        {
+            // Put command handlers defined in priority assemblies, last. This allows applications
+            // to override built-in command handlers.
+
+            var bootstrapper = IoC.Get<AppBootstrapper>();
+
+            return commandHandlers
+                .OrderBy(h => bootstrapper.PriorityAssemblies.Contains(h.GetType().Assembly) ? 1 : 0)
+                .ToList();
+        }
+
         public CommandHandlerWrapper GetCommandHandler(CommandDefinitionBase commandDefinition)
         {
             CommandHandlerWrapper commandHandler;
 
-            var activeItemViewModel = IoC.Get<IShell>().ActiveLayoutItem;
+            var shell = IoC.Get<IShell>();
+
+            var activeItemViewModel = shell.ActiveLayoutItem;
             if (activeItemViewModel != null)
             {
-                var activeItemView = ViewLocator.LocateForModel(activeItemViewModel, null, null);
-                var activeItemWindow = Window.GetWindow(activeItemView);
-                if (activeItemWindow != null)
-                {
-                    var startElement = FocusManager.GetFocusedElement(activeItemWindow);
+                commandHandler = GetCommandHandlerForLayoutItem(commandDefinition, activeItemViewModel);
+                if (commandHandler != null)
+                    return commandHandler;
+            }
 
-                    // First, we look at the currently focused element, and iterate up through
-                    // the tree, giving each DataContext a chance to handle the command.
-                    commandHandler = FindCommandHandlerInVisualTree(commandDefinition, startElement);
-                    if (commandHandler != null)
-                        return commandHandler;
-                }
+            var activeDocumentViewModel = shell.ActiveItem;
+            if (activeDocumentViewModel != null && !Equals(activeDocumentViewModel, activeItemViewModel))
+            {
+                commandHandler = GetCommandHandlerForLayoutItem(commandDefinition, activeDocumentViewModel);
+                if (commandHandler != null)
+                    return commandHandler;
             }
 
             // If none of the objects in the DataContext hierarchy handle the command,
@@ -73,6 +88,20 @@ namespace Gemini.Framework.Commands
                 return null;
 
             return commandHandler;
+        }
+
+        private CommandHandlerWrapper GetCommandHandlerForLayoutItem(CommandDefinitionBase commandDefinition, object activeItemViewModel)
+        {
+            var activeItemView = ViewLocator.LocateForModel(activeItemViewModel, null, null);
+            var activeItemWindow = Window.GetWindow(activeItemView);
+            if (activeItemWindow == null)
+                return null;
+
+            var startElement = FocusManager.GetFocusedElement(activeItemView) ?? activeItemView;
+
+            // First, we look at the currently focused element, and iterate up through
+            // the tree, giving each DataContext a chance to handle the command.
+            return FindCommandHandlerInVisualTree(commandDefinition, startElement);
         }
 
         private CommandHandlerWrapper FindCommandHandlerInVisualTree(CommandDefinitionBase commandDefinition, IInputElement target)

@@ -1,75 +1,62 @@
-﻿using System.IO;
+﻿using System;
+using System.IO;
+using System.Threading.Tasks;
 using Gemini.Demo.Modules.TextEditor.Views;
 using Gemini.Framework;
+using Gemini.Framework.Threading;
 
 namespace Gemini.Demo.Modules.TextEditor.ViewModels
 {
 #pragma warning disable 659
-    public class EditorViewModel : Document
+    public class EditorViewModel : PersistedDocument
 #pragma warning restore 659
     {
+        private EditorView _view;
 		private string _originalText;
-		private string _path;
-		private string _fileName;
-		private bool _isDirty;
 
-		public bool IsDirty
-		{
-			get { return _isDirty; }
-			set
-			{
-				if (value == _isDirty)
-					return;
-
-				_isDirty = value;
-				NotifyOfPropertyChange(() => IsDirty);
-			    UpdateDisplayName();
-			}
-		}
-
-		public override void CanClose(System.Action<bool> callback)
-		{
-			callback(!IsDirty);
-		}
-
-	    public void New(string name)
-	    {
-	        _fileName = name;
-	        _originalText = string.Empty;
-            UpdateDisplayName();
-	    }
-
-		public void Open(string path)
-		{
-			_path = path;
-			_fileName = Path.GetFileName(_path);
-		    UpdateDisplayName();
-		}
-
-        private void UpdateDisplayName()
+        protected override Task DoNew()
         {
-            DisplayName = (IsDirty) ? _fileName + "*" : _fileName;
+            _originalText = string.Empty;
+            ApplyOriginalText();
+            return TaskUtility.Completed;
+        }
+
+        protected override Task DoLoad(string filePath)
+        {
+            _originalText = File.ReadAllText(filePath);
+            ApplyOriginalText();
+            return TaskUtility.Completed;
+        }
+
+        protected override Task DoSave(string filePath)
+        {
+            var newText = _view.textBox.Text;
+            File.WriteAllText(filePath, newText);
+            _originalText = newText;
+            return TaskUtility.Completed;
+        }
+
+        private void ApplyOriginalText()
+        {
+            _view.textBox.Text = _originalText;
+
+            _view.textBox.TextChanged += delegate
+            {
+                IsDirty = string.Compare(_originalText, _view.textBox.Text) != 0;
+            };
         }
 
 		protected override void OnViewLoaded(object view)
 		{
-            if (_path != null)
-                using (var stream = File.OpenText(_path))
-                    _originalText = stream.ReadToEnd();
-
-		    var editor = (EditorView) view;
-			editor.textBox.Text = _originalText;
-
-			editor.textBox.TextChanged += delegate
-			{
-				IsDirty = string.Compare(_originalText, editor.textBox.Text) != 0;
-			};
+            _view = (EditorView) view;
 		}
 
         public override bool Equals(object obj)
 		{
 			var other = obj as EditorViewModel;
-			return other != null && string.Compare(_path, other._path) == 0;
+            return other != null
+                && string.Equals(FilePath, other.FilePath, StringComparison.InvariantCultureIgnoreCase)
+                && string.Equals(FileName, other.FileName, StringComparison.InvariantCultureIgnoreCase);
         }
     }
 }
