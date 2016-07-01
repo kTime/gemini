@@ -7,10 +7,14 @@
 Gemini is a WPF framework designed specifically for building IDE-like applications. It builds on some excellent libraries:
 
 * [AvalonDock](http://avalondock.codeplex.com)
-* [Caliburn Micro](http://caliburnmicro.codeplex.com/)
+* [Caliburn Micro](https://github.com/Caliburn-Micro/Caliburn.Micro)
 * [MEF](http://msdn.microsoft.com/en-us/library/dd460648.aspx)
 
-![Screenshot](https://raw.github.com/tgjones/gemini/master/doc/gemini-everything.png)
+Gemini ships with two themes: a Light theme and a Blue theme. There is also an in-development Dark theme.
+
+![Screenshot - Light theme](https://raw.github.com/tgjones/gemini/master/doc/gemini-everything-light.png)
+
+![Screenshot - Blue theme](https://raw.github.com/tgjones/gemini/master/doc/gemini-everything-blue.png)
 
 ## Getting started
 
@@ -57,9 +61,12 @@ on other modules, but this is taken care of by the NuGet package dependency syst
 * [Gemini.Modules.ErrorList](http://nuget.org/packages/Gemini.Modules.ErrorList/)
 * [Gemini.Modules.GraphEditor](http://nuget.org/packages/Gemini.Modules.GraphEditor/)
 * [Gemini.Modules.Inspector](http://nuget.org/packages/Gemini.Modules.Inspector/)
+* [Gemini.Modules.Inspector.MonoGame](http://nuget.org/packages/Gemini.Modules.Inspector.MonoGame/)
 * [Gemini.Modules.Inspector.Xna](http://nuget.org/packages/Gemini.Modules.Inspector.Xna/)
+* [Gemini.Modules.MonoGame](http://nuget.org/packages/Gemini.Modules.MonoGame/)
 * [Gemini.Modules.Output](http://nuget.org/packages/Gemini.Modules.Output/)
 * [Gemini.Modules.PropertyGrid](http://nuget.org/packages/Gemini.Modules.PropertyGrid/)
+* [Gemini.Modules.SharpDX](http://nuget.org/packages/Gemini.Modules.SharpDX/)
 * [Gemini.Modules.Xna](http://nuget.org/packages/Gemini.Modules.Xna/)
 
 ## Continuous builds
@@ -77,8 +84,8 @@ Make sure you select "Include Prerelease" when searching for NuGet packages.
 ## What does it do?
 
 Gemini allows you to build your WPF application by composing separate modules. This provides a nice
-way of separating out the code for each part of your application. For example, here is the (very simple)
-module used in the demo program:
+way of separating out the code for each part of your application. For example, here is a very simple
+module:
 
 ```csharp
 [Export(typeof(IModule))]
@@ -94,10 +101,6 @@ public class Module : ModuleBase
 
 	public override void Initialize()
 	{
-		MainMenu.All
-			.First(x => x.Name == "View")
-			.Add(new MenuItem("Home", OpenHome));
-
 		var homeViewModel = IoC.Get<HomeViewModel>();
 		Shell.OpenDocument(homeViewModel);
 
@@ -146,6 +149,57 @@ Shell.OpenDocument(new SceneViewModel());
 
 You can then create a `SceneView` view, and Caliburn Micro will use a convention-based lookup to find the correct view.
 
+### Persisted documents
+
+If you have a document that needs to be loaded from, and saved to, a file, you can use the `PersistedDocument`
+base class, to remove a lot of the boilerplate code that you would usually have to write. You only need to
+implement the `DoNew`, `DoLoad`, and `DoSave` methods.
+
+``` csharp
+public class EditorViewModel : PersistedDocument
+{
+	private EditorView _view;
+	private string _originalText;
+
+	protected override Task DoNew()
+	{
+		_originalText = string.Empty;
+		ApplyOriginalText();
+		return TaskUtility.Completed;
+	}
+
+	protected override Task DoLoad(string filePath)
+	{
+		_originalText = File.ReadAllText(filePath);
+		ApplyOriginalText();
+		return TaskUtility.Completed;
+	}
+
+	protected override Task DoSave(string filePath)
+	{
+		var newText = _view.textBox.Text;
+		File.WriteAllText(filePath, newText);
+		_originalText = newText;
+		return TaskUtility.Completed;
+	}
+
+	private void ApplyOriginalText()
+	{
+		_view.textBox.Text = _originalText;
+
+		_view.textBox.TextChanged += delegate
+		{
+			IsDirty = string.Compare(_originalText, _view.textBox.Text) != 0;
+		};
+	}
+
+	protected override void OnViewLoaded(object view)
+	{
+		_view = (EditorView) view;
+	}
+}
+```
+
 ### Tools
 
 Tools are usually docked to the sides of the window, although they can also be dragged
@@ -156,9 +210,9 @@ For example, here is the property grid tool class:
 [Export(typeof(IPropertyGrid))]
 public class PropertyGridViewModel : Tool, IPropertyGrid
 {
-	public override string DisplayName
+	public PropertyGridViewModel()
 	{
-		get { return "Properties"; }
+		DisplayName = "Properties";
 	}
 
 	public override PaneLocation PreferredLocation
@@ -183,9 +237,100 @@ For more details on creating documents and tools, look at the
 [demo program](https://github.com/tgjones/gemini/master/src/Gemini.Demo)
 and the source code for the built-in modules.
 
+### Commands
+
+Commands are one of the core concepts in Gemini. Commands help you to avoid duplicating code
+by letting you define command handlers in a single place, regardless of whether the command
+is invoked through a menu item, toolbar item, or other trigger.
+Gemini's commands are conceptually similar to WPF commands, but they are more powerful.
+
+First, create a command definition. Here's Gemini [command definition for opening files](https://github.com/tgjones/gemini/blob/master/src/Gemini/Modules/Shell/Commands/OpenFileCommandDefinition.cs):
+
+``` csharp
+[CommandDefinition]
+public class OpenFileCommandDefinition : CommandDefinition
+{
+	public const string CommandName = "File.OpenFile";
+
+	public override string Name
+	{
+		get { return CommandName; }
+	}
+
+	public override string Text
+	{
+		get { return "_Open"; }
+	}
+
+	public override string ToolTip
+	{
+		get { return "Open"; }
+	}
+
+	public override Uri IconSource
+	{
+		get { return new Uri("pack://application:,,,/Gemini;component/Resources/Icons/Open.png"); }
+	}
+	
+	[Export]
+    public static CommandKeyboardShortcut KeyGesture = new CommandKeyboardShortcut<OpenFileCommandDefinition>(new KeyGesture(Key.O, ModifierKeys.Control));
+}
+```
+
+Then, provide a command handler. You can do this in one of two ways. For global commands,
+that don't depend on a document context, create a global handler:
+
+``` csharp
+[CommandHandler]
+public class OpenFileCommandHandler : CommandHandlerBase<OpenFileCommandDefinition>
+{
+	public override void Update(Command command)
+	{
+		// You can enable / disable the command here with:
+		// command.Enabled = true;
+		
+		// You can also modify the command text / icon, which will affect
+		// any menu items or toolbar items bound to this command.
+	}
+	
+	public override async Task Run(Command command)
+	{
+		// ... implement command handling here
+	}
+}
+```
+
+For commands that depend on a document context, and should be disabled when there is no active document
+or the active document is not of the correct type, define the command in the document class:
+
+``` csharp
+public class MyDocument : Document, ICommandHandler<ClearTextCommandDefinition>
+{
+	void ICommandHandler<ClearTextCommandDefinition>.Update(Command command)
+	{
+		command.Enabled = this.Text.Any();
+	}
+
+	Task ICommandHandler<ClearTextCommandDefinition>.Run(Command command)
+	{
+		this.Text = string.Empty;
+		return TaskUtility.Completed;
+	}
+}
+```
+
+To remove built-in keyboard shortcuts, you can exclude them declaratively:
+
+``` csharp
+[Export]
+public static ExcludeCommandKeyboardShortcut ExcludeFileOpenShortcut = new ExcludeCommandKeyboardShortcut(OpenFileCommandDefinition.KeyGesture);
+```
+
+To find out how to bind commands to menus or toolbars, see the "MainMenu" and "ToolBars" modules below.
+
 ## What modules are built-in?
 
-Gemini itself is built out of six core modules:
+Gemini itself is built out of seven core modules:
 
 * MainWindow
 * Shell
@@ -203,9 +348,12 @@ Several more modules ship with Gemini, and are available as
 * ErrorList
 * GraphEditor
 * Inspector
+* Inspector.MonoGame
 * Inspector.Xna
+* MonoGame
 * Output
 * PropertyGrid
+* SharpDX
 * Xna
 
 For more information about these modules, see below. In general, each module adds some combination
@@ -308,10 +456,6 @@ public interface IShell
 
 Adds a main menu to the top of the window.
 
-#### Provides
-
-* `IMenu` interface
-
 #### NuGet package
 
 * [Gemini](http://nuget.org/packages/GeminiWpf/)
@@ -322,16 +466,38 @@ Adds a main menu to the top of the window.
 
 #### Usage
 
+First, create commands, as described above in the "Commands" section. Then declare menus, menu item groups,
+and menu items. This is how the built-in File menu and menu items are declared; you can create your own
+menus in the same way.
+
 ```csharp
-MainMenu.All.First(x => x.Name == "View")
-	.Add(new MenuItem("History", OpenHistory));
-
-// ...
-
-private static IEnumerable<IResult> OpenHistory()
+public static class MenuDefinitions
 {
-    yield return Show.Tool<IHistoryTool>();
+    [Export]
+    public static MenuDefinition FileMenu = new MenuDefinition(MainMenuBar, 0, Resources.FileMenuText);
+	
+	[Export]
+    public static MenuItemGroupDefinition FileNewOpenMenuGroup = new MenuItemGroupDefinition(FileMenu, 0);
+	
+	[Export]
+    public static MenuItemDefinition FileNewMenuItem = new TextMenuItemDefinition(
+        MenuDefinitions.FileNewOpenMenuGroup, 0, "_New");
 }
+```
+
+You can either use an existing menu or menu item group as a parent for your menu items, or create your own.
+
+To remove an existing menu item (such as a built-in menu item that you don't want), you can exclude it declaratively:
+
+``` csharp
+[Export]
+public static ExcludeMenuItemDefinition ExcludeOpenMenuItem = new ExcludeMenuItemDefinition(Gemini.Modules.Shell.MenuDefinitions.FileOpenMenuItem);
+
+[Export]
+public static ExcludeMenuItemGroupDefinition ExcludeWindowMenuItemGroup = new ExcludeMenuItemGroupDefinition(Gemini.Modules.MainMenu.MenuDefinitions.ViewToolsMenuGroup);
+
+[Export]
+public static ExcludeMenuDefinition ExcludeWindowMenuDefinition = new ExcludeMenuDefinition(Gemini.Modules.MainMenu.MenuDefinitions.WindowMenu);
 ```
 
 ### StatusBar module
@@ -369,11 +535,6 @@ statusBar.AddItem("Col 79", new GridLength(100));
 Adds a toolbar tray to the top of the window. By default, the toolbar tray is hidden - use
 `Shell.ToolBars.Visible = true` to show it.
 
-#### Provides
-
-* `IToolBars` interface
-* `IToolBar` interface
-
 #### NuGet package
 
 * [Gemini](http://nuget.org/packages/GeminiWpf/)
@@ -384,15 +545,28 @@ Adds a toolbar tray to the top of the window. By default, the toolbar tray is hi
 
 #### Usage
 
+First, create commands, as described above in the "Commands" section. Then declare toolbars, toolbar item groups,
+and toolbar items. This is how the standard toolbar and toolbar items are declared; you can create your own
+toolbars in the same way.
+
 ```csharp
-Shell.ToolBars.Visible = true;
-Shell.ToolBars.Items.Add(new ToolBarModel
+internal static class ToolBarDefinitions
 {
-	new ToolBarItem("Open", OpenFile).WithIcon(),
-    ToolBarItemBase.Separator,
-    new UndoToolBarItem(),
-    new RedoToolBarItem()
-});
+	[Export]
+	public static ToolBarDefinition StandardToolBar = new ToolBarDefinition(0, "Standard");
+	
+	[Export]
+    public static ToolBarItemGroupDefinition StandardOpenSaveToolBarGroup = new ToolBarItemGroupDefinition(
+        ToolBars.ToolBarDefinitions.StandardToolBar, 8);
+		
+	[Export]
+    public static ToolBarItemDefinition OpenFileToolBarItem = new CommandToolBarItemDefinition<OpenFileCommandDefinition>(
+        StandardOpenSaveToolBarGroup, 0);
+}
+
+// ...
+
+Shell.ToolBars.Visible = true;
 ```
 
 ### Toolbox module
@@ -733,6 +907,37 @@ inspectorTool.SelectedObject = new InspectableObjectBuilder()
 
 Adds editors for XNA types (`Vector3`, `Color`, etc.) to the Inspector module.
 
+### MonoGame module
+
+Provides a number of utilities and controls for working with MonoGame content in WPF.
+
+#### Provides
+
+* `GraphicsDeviceService` service that implements MonoGame's `IGraphicsDeviceService`
+* `DrawingSurface` control that uses `D3DImage` as described
+  [here](http://blog.bozalina.com/2010/11/xna-40-and-wpf.html).
+
+#### NuGet package
+
+* [Gemini.Modules.MonoGame](http://nuget.org/packages/Gemini.Modules.MonoGame/)
+
+#### Dependencies
+
+* [MonoGame](http://www.monogame.net)
+
+#### Usage
+
+```csharp
+public class MyDrawingSurface : DrawingSurface
+{
+    protected override RaiseDraw(DrawEventArgs args)
+    {
+        args.GraphicsDevice.Clear(Color.LightGreen);
+        base.RaiseDraw(args);
+    }
+}
+```
+
 ### Output module
 
 ![Screenshot](https://raw.github.com/tgjones/gemini/master/doc/gemini-module-output.png)
@@ -850,17 +1055,25 @@ Gemini includes three sample applications:
 Showcases many of the available modules. The screenshot below shows the interactive script editor in action -
 as you type, the code will be compiled in real-time into a dynamic assembly and then executed in the same AppDomain.
 
+It also includes a very basic example of a filter designer, built on the GraphEditor module.
+
 * [Source code](https://raw.github.com/tgjones/gemini/master/src/Gemini.Demo)
 
 ![Screenshot](https://raw.github.com/tgjones/gemini/master/doc/gemini-demo.png)
 
-### Gemini.Demo.FilterDesigner
+### Gemini.Demo.MonoGame
 
-Showcases the GraphEditor, Inspector and Toolbox modules.
+Showcases the MonoGame module.
 
-* [Source code](https://raw.github.com/tgjones/gemini/master/src/Gemini.Demo.FilterDesigner)
+* [Source code](https://raw.github.com/tgjones/gemini/master/src/Gemini.Demo.MonoGame)
+  
+### Gemini.Demo.SharpDX
 
-![Screenshot](https://raw.github.com/tgjones/gemini/master/doc/gemini-demo-filter-designer.png)
+Showcases the SharpDX module.
+
+* [Source code](https://raw.github.com/tgjones/gemini/master/src/Gemini.Demo.SharpDX)
+  
+![Screenshot](https://raw.github.com/tgjones/gemini/master/doc/gemini-demo-sharpdx.png)
 
 ### Gemini.Demo.Xna
 

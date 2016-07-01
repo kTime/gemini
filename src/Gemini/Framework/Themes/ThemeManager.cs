@@ -34,11 +34,9 @@ namespace Gemini.Framework.Themes
 
         private ResourceDictionary _applicationResourceDictionary;
 
-        private readonly ITheme[] _themes;
-
-        public IEnumerable<ITheme> Themes
+        public List<ITheme> Themes
         {
-            get { return _themes; }
+            get; private set;
         }
 
         public ITheme CurrentTheme { get; private set; }
@@ -46,14 +44,18 @@ namespace Gemini.Framework.Themes
         [ImportingConstructor]
         public ThemeManager([ImportMany] ITheme[] themes)
         {
-            _themes = themes;
+            Themes = new List<ITheme>(themes);
             _settingsEventManager.AddListener(s => s.ThemeName, value => SetCurrentTheme(value));
         }
 
         public bool SetCurrentTheme(string name)
         {
-            var theme = _themes.FirstOrDefault(x => x.Name == name);
+            var theme = Themes.FirstOrDefault(x => x.GetType().Name == name);
             if (theme == null)
+                return false;
+
+            var mainWindow = Application.Current.MainWindow;
+            if (mainWindow == null)
                 return false;
 
             CurrentTheme = theme;
@@ -66,7 +68,7 @@ namespace Gemini.Framework.Themes
             _applicationResourceDictionary.BeginInit();
             _applicationResourceDictionary.MergedDictionaries.Clear();
 
-            var windowResourceDictionary = Application.Current.MainWindow.Resources.MergedDictionaries[0];
+            var windowResourceDictionary = mainWindow.Resources.MergedDictionaries[0];
             windowResourceDictionary.BeginInit();
             windowResourceDictionary.MergedDictionaries.Clear();
 
