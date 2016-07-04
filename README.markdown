@@ -7,7 +7,7 @@
 Gemini is a WPF framework designed specifically for building IDE-like applications. It builds on some excellent libraries:
 
 * [AvalonDock](http://avalondock.codeplex.com)
-* [Caliburn Micro](http://caliburnmicro.codeplex.com/)
+* [Caliburn Micro](https://github.com/Caliburn-Micro/Caliburn.Micro)
 * [MEF](http://msdn.microsoft.com/en-us/library/dd460648.aspx)
 
 Gemini ships with two themes: a Light theme and a Blue theme. There is also an in-development Dark theme.
@@ -234,7 +234,7 @@ public class PropertyGridViewModel : Tool, IPropertyGrid
 ```
 
 For more details on creating documents and tools, look at the 
-[demo program](https://github.com/tgjones/gemini/master/src/Gemini.Demo)
+[demo program](https://github.com/tgjones/gemini/tree/master/src/Gemini.Demo)
 and the source code for the built-in modules.
 
 ### Commands
