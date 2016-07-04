@@ -1,6 +1,9 @@
 ﻿using System;
+using System.ComponentModel.Composition;
 using System.Windows.Input;
 using Gemini.Framework.Commands;
+using Gemini.Modules.Shell.Commands;
+using Gemini.Properties;
 
 namespace Gemini.Modules.UndoRedo.Commands
 {
@@ -16,12 +19,12 @@ namespace Gemini.Modules.UndoRedo.Commands
 
         public override string Text
         {
-            get { return "_Undo"; }
+            get { return Resources.EditUndoCommandText; }
         }
 
         public override string ToolTip
         {
-            get { return "Undo"; }
+            get { return Resources.EditUndoCommandToolTip; }
         }
 
         public override Uri IconSource
@@ -29,9 +32,7 @@ namespace Gemini.Modules.UndoRedo.Commands
             get { return new Uri("pack://application:,,,/Gemini;component/Resources/Icons/Undo.png"); }
         }
 
-        public override KeyGesture KeyGesture
-        {
-            get { return new KeyGesture(Key.Z, ModifierKeys.Control); }
-        }
+        [Export]
+        public static CommandKeyboardShortcut KeyGesture = new CommandKeyboardShortcut<UndoCommandDefinition>(new KeyGesture(Key.Z, ModifierKeys.Control));
     }
 }

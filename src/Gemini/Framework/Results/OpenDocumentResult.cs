@@ -1,8 +1,8 @@
 ﻿using System;
 using System.ComponentModel.Composition;
-using System.Linq;
 using Caliburn.Micro;
 using Gemini.Framework.Services;
+using Gemini.Modules.Shell.Commands;
 
 namespace Gemini.Framework.Results
 {
@@ -37,7 +37,7 @@ namespace Gemini.Framework.Results
 			var editor = _editor ??
 				(string.IsNullOrEmpty(_path)
 					? (IDocument)IoC.GetInstance(_editorType, null)
-					: GetEditor(_path));
+					:  GetEditor(_path));
 
 			if (editor == null)
 			{
@@ -67,11 +67,7 @@ namespace Gemini.Framework.Results
 
 		private static IDocument GetEditor(string path)
 		{
-			return IoC.GetAllInstances(typeof(IEditorProvider))
-				.Cast<IEditorProvider>()
-				.Where(provider => provider.Handles(path))
-				.Select(provider => provider.Open(path))
-				.FirstOrDefault();
+		    return OpenFileCommandHandler.GetEditor(path).Result;
 		}
 	}
 }
