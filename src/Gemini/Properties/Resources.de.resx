@@ -235,7 +235,7 @@
     <value>Werkzeuge</value>
   </data>
   <data name="MainMenuSettingsLanguage" xml:space="preserve">
-    <value>Sprache:</value>
+    <value>Sprache (Language):</value>
   </data>
   <data name="MainMenuSettingsLanguageRestart" xml:space="preserve">
     <value>Erfordert Neustart</value>
@@ -251,5 +251,35 @@
   </data>
   <data name="ThemeDarkName" xml:space="preserve">
     <value>Dunkel</value>
+  </data>
+  <data name="FileRecentFilesCommandText" xml:space="preserve">
+    <value>Zuletzt geöffnete Dateien</value>
+  </data>
+  <data name="FileRecentFilesCommandToolTip" xml:space="preserve">
+    <value>Zuletzt geöffnete Dateien</value>
+  </data>
+  <data name="FileSaveAllCommandText" xml:space="preserve">
+    <value>Alle speichern</value>
+  </data>
+  <data name="FileSaveAllCommandToolTip" xml:space="preserve">
+    <value>Alle speichern</value>
+  </data>
+  <data name="AdvancedSliderCommitErrorFormat" xml:space="preserve">
+    <value>Setzen des Werts fehlgeschlagen: {0}</value>
+  </data>
+  <data name="AllSupportedFiles" xml:space="preserve">
+    <value>Alle unterstützten Dateien</value>
+  </data>
+  <data name="AllFiles" xml:space="preserve">
+    <value>Alle Dateien</value>
+  </data>
+  <data name="FileNewCommandToolTip" xml:space="preserve">
+    <value>Neu</value>
+  </data>
+  <data name="ViewFullScreenCommandText" xml:space="preserve">
+    <value>Vollbild</value>
+  </data>
+  <data name="ViewFullScreenCommandToolTip" xml:space="preserve">
+    <value>Vollbild</value>
   </data>
 </root>

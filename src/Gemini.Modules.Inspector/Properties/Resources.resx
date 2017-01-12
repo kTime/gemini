@@ -140,7 +140,7 @@
   </data>
   <data name="ResetSymbol" xml:space="preserve">
     <value>⟲</value>
-  </data>
+  <comment>@Invariant</comment></data>
   <data name="ColorEditorStandardColors" xml:space="preserve">
     <value>Standard Colors</value>
   </data>
@@ -155,5 +155,8 @@
   </data>
   <data name="ColorEditorAdvanced" xml:space="preserve">
     <value>Advanced</value>
+  </data>
+  <data name="ResetObjectValueActionFormat" xml:space="preserve">
+    <value>Reset {0} from {1} to {2}</value>
   </data>
 </root>
