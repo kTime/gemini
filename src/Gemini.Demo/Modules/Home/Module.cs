@@ -24,7 +24,11 @@ namespace Gemini.Demo.Modules.Home
         public static MenuItemDefinition ViewHelixMenuItem = new CommandMenuItemDefinition<ViewHelixCommandDefinition>(
             ViewDemoMenuGroup, 1);
 
-	    public override IEnumerable<IDocument> DefaultDocuments
+        [Export]
+        public static MenuItemDefinition MessageDialogMenuItem = new CommandMenuItemDefinition<MessageDialogCommandDefinition>(
+           ViewDemoMenuGroup, 2);
+
+        public override IEnumerable<IDocument> DefaultDocuments
 	    {
 	        get
 	        {

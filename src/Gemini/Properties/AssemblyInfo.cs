@@ -9,10 +9,10 @@ using System.Windows.Markup;
 [assembly: AssemblyTitle("Gemini")]
 [assembly: AssemblyDescription("Gemini is an application shell similar in concept to the Visual Studio Shell. It uses AvalonDock and has an MVVM architecture based on Caliburn Micro.")]
 [assembly: AssemblyConfiguration("Retail")]
-[assembly: AssemblyCompany("Tim Jones")]
+[assembly: AssemblyCompany("Pacific Aluminium")]
 [assembly: AssemblyProduct("Gemini")]
-[assembly: AssemblyCopyright("Copyright ©2013 Tim Jones")]
-[assembly: AssemblyTrademark("timjones.tw")]
+[assembly: AssemblyCopyright("Copyright ©2018 Pacific Aluminium")]
+[assembly: AssemblyTrademark("")]
 [assembly: AssemblyCulture("")]
 
 // Setting ComVisible to false makes the types in this assembly not visible 
@@ -23,9 +23,9 @@ using System.Windows.Markup;
 // The following GUID is for the ID of the typelib if this project is exposed to COM
 [assembly: Guid("35ea041d-cf35-45ed-9675-7e199505612b")]
 
-[assembly: AssemblyVersion("0.6.1.1")]
-[assembly: AssemblyFileVersion("0.6.1.1")]
-[assembly: AssemblyInformationalVersion("0.6.0-ci6101")]
+[assembly: AssemblyVersion("0.6.1.2")]
+[assembly: AssemblyFileVersion("0.6.1.2")]
+//[assembly: AssemblyInformationalVersion("0.6.0-ci611")]
 
 [assembly: ThemeInfo(ResourceDictionaryLocation.None, ResourceDictionaryLocation.SourceAssembly)]
 

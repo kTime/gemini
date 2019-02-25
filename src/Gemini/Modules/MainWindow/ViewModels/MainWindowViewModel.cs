@@ -1,10 +1,12 @@
-﻿using System.ComponentModel.Composition;
+﻿using System;
+using System.ComponentModel.Composition;
 using System.Windows;
 using System.Windows.Media;
 using Caliburn.Micro;
 using Gemini.Framework.Commands;
 using Gemini.Framework.Services;
 using Gemini.Properties;
+using MahApps.Metro.Controls.Dialogs;
 
 namespace Gemini.Modules.MainWindow.ViewModels
 {
@@ -80,6 +82,21 @@ namespace Gemini.Modules.MainWindow.ViewModels
         public IShell Shell
         {
             get { return _shell; }
+        }
+
+        private IDialogCoordinator metroDialogCoordinator;
+
+        public IDialogCoordinator MetroDialogCoordinator
+        {
+            get
+            {
+                if (metroDialogCoordinator == null)
+                {
+                    metroDialogCoordinator = DialogCoordinator.Instance;
+                }
+
+                return metroDialogCoordinator;
+            }
         }
 
         void IPartImportsSatisfiedNotification.OnImportsSatisfied()

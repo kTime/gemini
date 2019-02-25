@@ -6,15 +6,16 @@ using Caliburn.Micro;
 using Gemini.Demo.Properties;
 using Gemini.Framework.Services;
 using Gemini.Modules.Shell.Views;
+using MahApps.Metro.Controls.Dialogs;
 
 namespace Gemini.Demo.Modules.Shell.ViewModels
 {
     [Export(typeof(IShell))]
     public class ShellViewModel : Gemini.Modules.Shell.ViewModels.ShellViewModel
-    {
+    {        
         static ShellViewModel()
-        {
-            ViewLocator.AddNamespaceMapping(typeof(ShellViewModel).Namespace, typeof(ShellView).Namespace);
+        {            
+            ViewLocator.AddNamespaceMapping(typeof(ShellViewModel).Namespace, typeof(ShellView).Namespace);            
         }
 
         public override void CanClose(Action<bool> callback)

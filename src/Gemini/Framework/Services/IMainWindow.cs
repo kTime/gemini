@@ -1,4 +1,5 @@
-﻿using System.Windows;
+﻿using MahApps.Metro.Controls.Dialogs;
+using System.Windows;
 using System.Windows.Media;
 
 namespace Gemini.Framework.Services
@@ -13,5 +14,7 @@ namespace Gemini.Framework.Services
         ImageSource Icon { get; set; } 
 
         IShell Shell { get; }
+
+        IDialogCoordinator MetroDialogCoordinator { get; }
     }
 }

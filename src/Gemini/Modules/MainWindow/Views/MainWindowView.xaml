@@ -6,6 +6,8 @@
                      xmlns:i="http://schemas.microsoft.com/expression/2010/interactivity"
                      xmlns:behaviours="http://metro.mahapps.com/winfx/xaml/shared"
                      xmlns:behaviors="clr-namespace:Gemini.Framework.Behaviors"
+                     xmlns:Dialog="clr-namespace:MahApps.Metro.Controls.Dialogs;assembly=MahApps.Metro"       
+                     Dialog:DialogParticipation.Register="{Binding}"
                      WindowTransitionsEnabled="False" 
                      Title="{Binding Title}" 
                      Icon="{Binding Icon}" 
